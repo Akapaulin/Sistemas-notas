@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class SistemaNotas {
@@ -18,18 +19,20 @@ public class SistemaNotas {
 		try {
 			// Conecte-se ao banco de dados
 			Connection connection = DriverManager.getConnection(URL, USUARIO, SENHA);
-			int opcao;
+			Integer opcao;
 			do {
 				menu();
 				System.out.print("Digite uma opção: ");
-				opcao = console.nextInt();
-				console.nextLine();
+				
+				try {
+					String input = console.nextLine();
+					opcao = Integer.parseInt(input);
+				
 				switch (opcao) {
 				case 0:
 					System.out.println("Sistema fechado!");
 					// Feche a conexão com o banco de dados
 					connection.close();
-					console.close();
 					break;
 				case 1:
 					System.out.print("Digite o nome do aluno: ");
@@ -62,10 +65,25 @@ public class SistemaNotas {
 					// Atualize uma nota
 					atualizarNota(connection, nomeAluno4, disciplina4, nota4);
 					break;
+				default:
+					System.out.println("Opção inválida, escolha novamente.");
+					break;
+				}
+				
+				} catch (NumberFormatException e) {
+					System.out.println("Opção inválida, escolha novamente.");
+					opcao = -1;
+					console.nextLine();
+				} catch (InputMismatchException e) {
+					System.out.println("Opção inválida, escolha novamente.");
+					opcao = -1;
+					console.nextLine();
 				}
 			} while (opcao != 0);
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			console.close();
 		}
 	}
 
@@ -77,9 +95,8 @@ public class SistemaNotas {
 		System.out.println("3) Visualizar notas");
 		System.out.println("4) Atualizar nota");
 	}
-	
-	private static void cadastrarAluno(Connection connection, String nomeAluno)
-			throws SQLException {
+
+	private static void cadastrarAluno(Connection connection, String nomeAluno) throws SQLException {
 		String insertQuery = "INSERT INTO alunos (nome) VALUES (?)";
 		PreparedStatement preparedStatement = connection.prepareStatement(insertQuery);
 		preparedStatement.setString(1, nomeAluno);
